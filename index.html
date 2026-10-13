@@ -101,7 +101,7 @@ textarea::placeholder{color:var(--fa)}
 <div id="lock"><img class="av" src="avatar.jpg" style="width:56px;height:56px"><div style="font-size:30px;font-weight:700;letter-spacing:-.8px;margin:24px 0 8px">Welcome back</div><div style="color:var(--mu)">Enter your passphrase to unlock.</div>
 <input class="inp" id="pw" type="password" placeholder="Passphrase" style="margin-top:28px" autocomplete="current-password"><button class="cta" onclick="unlock()">Unlock</button><div id="pwErr" style="color:#FF8A8A;margin-top:12px;font-size:14px"></div></div>
 <script>
-const CATS=[['Food','🍜'],['Groceries','🥬'],['Transport','🚇'],['Shopping','🛍️'],['Subscription','🔁'],['Entertain','🎬'],['Health','💊'],['Education','📚'],['Bills','🧾'],['Other','💳']];
+const CATS=[['Food','🍜'],['Groceries','🛒'],['Transport','🚇'],['Shopping','🛍️'],['Subscription','🔁'],['Entertain','🎬'],['Health','💊'],['Education','📚'],['Bills','🧾'],['Other','💳']];
 const EM=Object.fromEntries(CATS);
 const $=id=>document.getElementById(id);
 const LS=k=>JSON.parse(localStorage.getItem('vault.'+k)||'null'),SS=(k,v)=>localStorage.setItem('vault.'+k,JSON.stringify(v));
