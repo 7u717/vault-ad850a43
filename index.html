@@ -57,6 +57,16 @@ header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-
 .cr{padding:14px 0}.cr .t{display:flex;justify-content:space-between;font-size:15px}.cr .t span{color:var(--mu)}
 .cb{height:4px;border-radius:4px;background:var(--s1);margin-top:10px;overflow:hidden}.cb i{display:block;height:100%;border-radius:4px;background:var(--ac);transform-origin:left;animation:gx .8s var(--sp) both}@keyframes gx{from{transform:scaleX(0)}}
 .trio{display:flex;gap:28px;margin-top:22px}.trio div span{display:block;font-size:12px;color:var(--fa)}.trio b{font-size:17px;font-weight:600}
+.rl{display:flex;align-items:center;gap:14px;padding:18px 12px;margin:0 -12px;border-radius:16px;transition:background .2s}.rl:active{background:var(--s1)}
+.rl .n{flex:1;min-width:0}.rl .n b{display:block;font-size:16px;font-weight:600}.rl .n span{font-size:13px;color:var(--fa)}
+.rl .r{text-align:right}.rl .r b{display:block;font-size:16px;font-weight:600}.rl .r span{font-size:12px;color:var(--mu)}
+.rl+.rl{border-top:1px solid var(--ln)}
+.tag{display:inline-block;font-size:11px;font-weight:600;color:var(--ac);background:var(--acd);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.mini{width:54px;height:24px;flex:none}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--mu);font-size:15px;padding:16px 0 0}
+.kv2{display:grid;grid-template-columns:1fr 1fr;gap:22px 16px;margin-top:24px}.kv2 span{display:block;font-size:12px;color:var(--fa)}.kv2 b{font-size:18px;font-weight:600}
+.ln2{display:flex;justify-content:space-between;padding:12px 0;font-size:15px;border-bottom:1px solid var(--ln)}.ln2 span{color:var(--mu)}
+.up{color:var(--wr)}.dn{color:var(--ac)}
 /* nav */
 nav{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:4px;padding:6px;border-radius:999px;background:rgba(28,28,32,.82);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);box-shadow:0 10px 40px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.05)}
 nav .t{width:52px;height:48px;border-radius:999px;display:grid;place-items:center;color:var(--fa);transition:color .25s}nav .t.on{color:var(--tx)}
@@ -93,9 +103,11 @@ textarea::placeholder{color:var(--fa)}
  <div id="list"></div>
 </section>
 <section class="view" id="v-stats"></section>
+<section class="view" id="v-reports"></section>
 <nav><button class="t on" data-v="home" aria-label="Home"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 9.5 11 3l8 6.5V19a1 1 0 0 1-1 1h-4v-6H8v6H4a1 1 0 0 1-1-1z"/></svg></button>
 <button class="add" onclick="openAdd()" aria-label="Add"><svg width="22" height="22" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M11 4v14M4 11h14"/></svg></button>
-<button class="t" data-v="stats" aria-label="Stats"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V11M11 19V4M18 19v-6"/></svg></button></nav>
+<button class="t" data-v="stats" aria-label="Stats"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V11M11 19V4M18 19v-6"/></svg></button>
+<button class="t" data-v="reports" aria-label="Reports"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3h7l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8.5 11h6M8.5 14.5h6M8.5 7.5h3"/></svg></button></nav>
 <div class="scrim" id="scrim" onclick="closeSheet()"></div><div class="sheet" id="sheet"></div>
 <div class="snack" id="snack"><span id="snT"></span><button id="snB">Undo</button></div>
 <div id="lock"><img class="av" src="avatar.jpg" style="width:56px;height:56px"><div style="font-size:30px;font-weight:700;letter-spacing:-.8px;margin:24px 0 8px">Welcome back</div><div style="color:var(--mu)">Enter your passphrase to unlock.</div>
@@ -171,10 +183,49 @@ function renderStats(){const v=$('v-stats');if(!server){v.innerHTML='<div class=
  <div class="sec"><h3>Daily</h3><a class="num">${selDay?fd(selDay)+' · '+f2(by[selDay]||0):'tap a bar'}</a></div>
  <div class="chart">${bars}</div><div class="ax"><span>${fd(c.s)}</span><span>${fd(ymd(new Date(c.ed-864e5)))}</span></div>
  <div class="sec"><h3>Categories</h3></div>${Object.entries(bc).sort((a,b)=>b[1]-a[1]).map(([k,x],j)=>`<div class="cr" onclick="filt='${k}';go('home');openFilter()"><div class="t"><div>${EM[k]} &nbsp;${k}</div><span class="num">${f0(x)} · ${tot?Math.round(x/tot*100):0}%</span></div><div class="cb"><i style="width:${Math.max(0,x/mx*100)}%;animation-delay:${j*50}ms;opacity:${1-j*.07}"></i></div></div>`).join('')||'<div class="empty">No spending.</div>'}`}
-function render(){renderHome();renderStats()}
+function render(){renderHome();renderStats();if(view=='reports')renderReports()}
+
+// ---------- reports ----------
+let rep=null;
+const bud=c=>c.s==cycleOf(0).s?st.budget:((st.cb&&st.cb[c.s])??st.budget);
+const cyc2=(s)=>{const d=new Date(s+'T00:00');return{s,e:ymd(new Date(d.getFullYear(),d.getMonth()+1,28)),sd:d,ed:new Date(d.getFullYear(),d.getMonth()+1,28)}};
+const mlab=c=>{const o={month:'short',day:'numeric'};return new Date(c.s+'T00:00').toLocaleDateString('en-US',o)+' – '+new Date(c.ed-864e5).toLocaleDateString('en-US',o)};
+function cycles(){const tx=all();if(!tx.length)return[];const mn=tx.reduce((a,t)=>t.date<a?t.date:a,'9999');const out=[];for(let o=0;o>-60;o--){const c=cycleOf(o);if(c.e<=mn)break;out.push(c)}return out}
+function cstat(c){const tx=all().filter(t=>inC(t,c)),tot=tx.reduce((a,t)=>a+t.amount,0),n=days(c.sd,c.ed),cur=c.s==cycleOf(0).s,el=cur?Math.max(1,days(c.sd,D0())+1):n;
+ const by={};for(const t of tx)by[t.date]=(by[t.date]||0)+t.amount;return{tx,tot,n,el,cur,by,b:bud(c)}}
+function spark(c,S){const w=54,h=24,pts=[];let acc=0;for(let k=0;k<S.n;k++){const d=ymd(new Date(c.sd.getFullYear(),c.sd.getMonth(),28+k));if(S.cur&&d>today())break;acc+=Math.max(0,S.by[d]||0);pts.push(acc)}
+ const mx=Math.max(S.b,acc,1);const p=pts.map((v,i)=>`${(i/(S.n-1)*w).toFixed(1)},${(h-1-v/mx*(h-2)).toFixed(1)}`).join(' ');
+ return`<svg class="mini" viewBox="0 0 ${w} ${h}"><line x1="0" y1="${(h-1-S.b/mx*(h-2)).toFixed(1)}" x2="${w}" y2="${(h-1-S.b/mx*(h-2)).toFixed(1)}" stroke="#2A2A30" stroke-dasharray="2 2"/><polyline points="${p}" fill="none" stroke="${acc>S.b?'var(--wr)':'var(--ac)'}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`}
+function renderReports(){const v=$('v-reports');if(!server){v.innerHTML='<div class="sk" style="height:300px;margin-top:30px"></div>';return}
+ if(rep)return renderReport(rep);const cs=cycles();
+ v.innerHTML=`<div class="hero" style="padding-bottom:0"><div class="lab">Monthly reports</div><div style="font-size:15px;color:var(--mu);margin-top:6px">Each cycle runs from the 28th to the 27th.</div></div><div style="margin-top:18px">`+cs.map(c=>{const S=cstat(c),p=Math.round(S.tot/S.b*100);
+ return`<div class="rl" onclick="rep='${c.s}';buzz(5);renderReports();scrollTo({top:0})"><div class="n"><b>${mlab(c)}${S.cur?'<span class="tag">In progress</span>':''}</b><span>${S.tx.length} transactions</span></div>${spark(c,S)}<div class="r"><b class="num">${f0(S.tot)}</b><span class="${S.tot>S.b?'up':''}">${p}% of ${f0(S.b)}</span></div></div>`}).join('')+`</div><div style="height:40px"></div>`||'<div class="empty">No data yet.</div>'}
+function renderReport(s){const c=cyc2(s),S=cstat(c),pc=cyc2(ymd(new Date(c.sd.getFullYear(),c.sd.getMonth()-1,28))),P=cstat(pc),v=$('v-reports');
+ const pos=S.tx.filter(t=>t.amount>0),ref=S.tx.filter(t=>t.amount<0),pa=S.tx.filter(t=>t.type=='preauth'),unc=S.tx.filter(t=>t.uncertain).length;
+ const hd=Object.entries(S.by).sort((a,b)=>b[1]-a[1])[0];const bc={};for(const t of S.tx)bc[t.category]=(bc[t.category]||0)+t.amount;
+ const mc={};for(const t of pos){const k=label(t);(mc[k]=mc[k]||[0,0]);mc[k][0]+=t.amount;mc[k][1]++}const tm=Object.entries(mc).sort((a,b)=>b[1][0]-a[1][0]).slice(0,5);
+ const dlt=P.tx.length&&P.tot?((S.tot-P.tot)/P.tot*100):null,left=S.b-S.tot,mx=Math.max(1,...Object.values(bc));
+ const g={};for(const t of S.tx)(g[t.date]=g[t.date]||[]).push(t);
+ v.innerHTML=`<button class="back" onclick="rep=null;buzz(5);renderReports()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m10 3-5 5 5 5"/></svg>All reports</button>
+ <div class="hero"><div class="lab">${mlab(c)}${S.cur?'<span class="tag">In progress</span>':''}</div><div class="big num">${f2(S.tot).replace(/\.(\d\d)$/,'<span class="c">.$1</span>')}</div>
+ <div class="prog"><i id="rpg" style="${S.tot>S.b?'background:var(--wr)':''}"></i></div>
+ <div class="sub"><span>${left<0?`<b class="up">${f0(-left)}</b> over`:`<b>${f0(left)}</b> left`}</span><span class="num" onclick="cycBudget('${s}')">${Math.round(S.tot/S.b*100)}% of <b>${f0(S.b)}</b> ✎</span></div>
+ ${dlt!=null?`<div style="margin-top:14px;font-size:14px;color:var(--mu)"><b class="${dlt>0?'up':'dn'}">${dlt>0?'▲':'▼'} ${Math.abs(dlt).toFixed(0)}%</b> vs previous cycle (${f0(P.tot)})${S.cur?' · so far':''}</div>`:''}
+ <div class="kv2"><div><span>Transactions</span><b class="num">${S.tx.length}</b></div><div><span>Avg per day</span><b class="num">${f2(S.tot/S.el)}</b></div><div><span>Highest day</span><b class="num">${hd?f2(hd[1]):'—'}</b>${hd?`<span>${fd(hd[0])}</span>`:''}</div><div><span>Days</span><b class="num">${S.cur?S.el+' of '+S.n:S.n}</b></div></div></div>
+ <div class="sec"><h3>Categories</h3></div>${Object.entries(bc).sort((a,b)=>b[1]-a[1]).map(([k,x],j)=>`<div class="cr"><div class="t"><div>${EM[k]||'💳'} &nbsp;${k}</div><span class="num">${f2(x)} · ${S.tot?Math.round(x/S.tot*100):0}%</span></div><div class="cb"><i style="width:${Math.max(0,x/mx*100)}%;animation-delay:${j*50}ms;opacity:${1-j*.07}"></i></div></div>`).join('')||'<div class="empty">No spending.</div>'}
+ ${tm.length?`<div class="sec"><h3>Top merchants</h3></div>${tm.map(([k,[a,n]])=>`<div class="ln2"><div>${esc(k)} <span>· ${n}×</span></div><b class="num" style="font-weight:550">${f2(a)}</b></div>`).join('')}`:''}
+ <div class="sec"><h3>Notes</h3></div>
+ <div class="ln2"><div>Pending pre-auths <span>· ${pa.length}</span></div><span class="num">${f2(pa.reduce((a,t)=>a+t.amount,0))}</span></div>
+ <div class="ln2"><div>Refunds <span>· ${ref.length}</span></div><span class="num">${ref.length?'+'+f2(-ref.reduce((a,t)=>a+t.amount,0)):'—'}</span></div>
+ <div class="ln2" style="border:0"><div>Category guessed <span>· ${unc}</span></div><span>${unc?'tap a row to sort':'all sorted'}</span></div>
+ <div class="sec"><h3>All transactions</h3><a>${S.tx.length}</a></div>
+ <div id="rlist">${Object.entries(g).map(([dt,ts])=>`<div class="dh"><span>${dayT(dt)}</span><span class="num">${f2(ts.reduce((a,t)=>a+t.amount,0))}</span></div>`+ts.map(txHTML).join('')).join('')||'<div class="empty">No transactions.</div>'}</div><div style="height:24px"></div>`;
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{const p=$('rpg');if(p)p.style.width=Math.min(100,S.tot/S.b*100)+'%'}));bindRows()}
+function cycBudget(s){const c=cyc2(s),cur=s==cycleOf(0).s;sheet(`<div class="mh"><b>Budget · ${mlab(c)}</b><div>${cur?'Also used on Home for this cycle.':'Only affects this cycle\u2019s report.'}</div></div><input class="inp num" id="cbIn" inputmode="decimal" value="${bud(c)}"><button class="cta" onclick="const x=parseFloat($('cbIn').value);if(x>0){st.cb=st.cb||{};st.cb['${s}']=x;if(${cur})st.budget=x;save()}closeSheet();render();snack('Budget saved')">Save</button>`)}
+
 // nav
 function go(v){view=v;document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id=='v-'+v));document.querySelectorAll('nav .t').forEach(b=>b.classList.toggle('on',b.dataset.v==v));
- $('ttl').textContent=v=='stats'?'Insights':'Vault';v=='stats'?renderStats():renderHome();scrollTo({top:0,behavior:'smooth'});buzz(5)}
+ $('ttl').textContent=v=='stats'?'Insights':v=='reports'?'Reports':'Vault';if(v=='reports'){rep=null;renderReports()}else v=='stats'?renderStats():renderHome();scrollTo({top:0,behavior:'smooth'});buzz(5)}
 document.querySelectorAll('nav .t').forEach(b=>b.onclick=()=>go(b.dataset.v));
 function openFilter(){$('srch').classList.add('on');$('fcats').style.display='flex';$('fcats').innerHTML=[['?','Unsorted'],...CATS.map(c=>[c[0],c[1]+' '+c[0]])].map(([k,l])=>`<button class="chip ${filt==k?'on':''}" onclick="filt=filt=='${k}'?null:'${k}';buzz(5);openFilter();renderHome()">${l}</button>`).join('')}
 function toggleSearch(){if(view!='home')go('home');if($('srch').classList.contains('on')){$('srch').classList.remove('on');$('fcats').style.display='none';query='';filt=null;$('q').value='';renderHome()}else{openFilter();setTimeout(()=>$('q').focus(),60)}buzz(5)}
