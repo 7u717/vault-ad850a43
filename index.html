@@ -125,7 +125,7 @@ const CATS=[['Food','🍔','#F91880'],['Groceries','🛒','#00BA7C'],['Transport
 const C=Object.fromEntries(CATS.map(c=>[c[0],c]));const ce=k=>(C[k]||C.Other);
 const $=id=>document.getElementById(id);
 const LS=k=>JSON.parse(localStorage.getItem('vault.'+k)||'null'),SS=(k,v)=>localStorage.setItem('vault.'+k,JSON.stringify(v));
-let server=null,st=Object.assign({budget:1900,goal:600,edits:{},deleted:{},manual:[]},LS('state')||{}),filt='All',query='',cycOff=0,selDay=null;
+let server=null,st=Object.assign({budget:2500,goal:600,edits:{},deleted:{},manual:[]},LS('state')||{}),_b25=(st.b25||(st.budget=2500,st.b25=1)),filt='All',query='',cycOff=0,selDay=null;
 const save=()=>SS('state',st);
 const buzz=(n=8)=>{try{navigator.vibrate&&navigator.vibrate(n)}catch(e){}};
 const f2=n=>(n<0?'-':'')+'$'+Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
