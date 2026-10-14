@@ -106,7 +106,6 @@ textarea::placeholder{color:var(--fa)}
 <section class="view" id="v-reports"></section>
 <nav><button class="t on" data-v="home" aria-label="Home"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 9.5 11 3l8 6.5V19a1 1 0 0 1-1 1h-4v-6H8v6H4a1 1 0 0 1-1-1z"/></svg></button>
 <button class="add" onclick="openAdd()" aria-label="Add"><svg width="22" height="22" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M11 4v14M4 11h14"/></svg></button>
-<button class="t" data-v="stats" aria-label="Stats"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V11M11 19V4M18 19v-6"/></svg></button>
 <button class="t" data-v="reports" aria-label="Reports"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3h7l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8.5 11h6M8.5 14.5h6M8.5 7.5h3"/></svg></button></nav>
 <div class="scrim" id="scrim" onclick="closeSheet()"></div><div class="sheet" id="sheet"></div>
 <div class="snack" id="snack"><span id="snT"></span><button id="snB">Undo</button></div>
@@ -167,7 +166,7 @@ function renderHome(){if(!server){$('homeTop').innerHTML='<div class="sk" style=
  <div class="sub"><span><b class="num">${f0(Math.max(0,rem)/left)}</b>/day for ${left} days</span><span class="num" onclick="openBudget()">${f0(spent)} of ${f0(st.budget)}</span></div>
  ${lc&&st.ackLow!=lc?`<button class="notice" onclick="lowInfo('${lc}')"><i></i>Card credit under 20%</button>`:''}</div>
  <div class="week"><div class="lab">Last 7 days · ${f0(wk.reduce((a,w)=>a+w[1],0))}</div><div class="wk">${wk.map((w,k)=>`<div class="${k==6?'t':''}"><i style="height:${Math.max(4,w[1]/wm*100)}%;animation-delay:${k*40}ms"></i><span>${w[2].toLocaleDateString('en-AU',{weekday:'narrow'})}</span></div>`).join('')}</div></div>
- <div class="sec"><h3>Activity</h3><a onclick="go('stats')">${cur.length} this cycle</a></div>`;
+ <div class="sec"><h3>Activity</h3><a onclick="go('reports');rep=cycleOf(0).s;selDay=null;renderReports()">${cur.length} this cycle</a></div>`;
  requestAnimationFrame(()=>requestAnimationFrame(()=>{const p=$('pg');if(p)p.style.width=(pct*100)+'%'}));
  const q=query.toLowerCase();let list=(searching?tx:cur).filter(t=>(!filt||(filt=='?'?t.uncertain:t.category==filt))&&(!q||(label(t)+' '+t.merchant+' '+t.category+' '+t.amount).toLowerCase().includes(q)));
  const lim=searching||showAll?list.length:20;const g={};for(const t of list.slice(0,lim))(g[t.date]=g[t.date]||[]).push(t);
@@ -186,7 +185,7 @@ function renderStats(){const v=$('v-stats');if(!server){v.innerHTML='<div class=
  <div class="sec"><h3>Daily</h3><a class="num">${selDay?fd(selDay)+' · '+f2(by[selDay]||0):'tap a bar'}</a></div>
  <div class="chart">${bars}</div><div class="ax"><span>${fd(c.s)}</span><span>${fd(ymd(new Date(c.ed-864e5)))}</span></div>
  <div class="sec"><h3>Categories</h3></div>${Object.entries(bc).sort((a,b)=>b[1]-a[1]).map(([k,x],j)=>`<div class="cr" onclick="filt='${k}';go('home');openFilter()"><div class="t"><div>${EM[k]} &nbsp;${k}</div><span class="num">${f0(x)} · ${tot?Math.round(x/tot*100):0}%</span></div><div class="cb"><i style="width:${Math.max(0,x/mx*100)}%;animation-delay:${j*50}ms;opacity:${1-j*.07}"></i></div></div>`).join('')||'<div class="empty">No spending.</div>'}`}
-function render(){renderHome();renderStats();if(view=='reports')renderReports()}
+function render(){renderHome();if(view=='reports')renderReports()}
 
 // ---------- reports ----------
 let rep=null;
@@ -209,12 +208,17 @@ function renderReport(s){const c=cyc2(s),S=cstat(c),pc=cyc2(ymd(new Date(c.sd.ge
  const mc={};for(const t of pos){const k=label(t);(mc[k]=mc[k]||[0,0]);mc[k][0]+=t.amount;mc[k][1]++}const tm=Object.entries(mc).sort((a,b)=>b[1][0]-a[1][0]).slice(0,5);
  const dlt=P.tx.length&&P.tot?((S.tot-P.tot)/P.tot*100):null,left=S.b-S.tot,mx=Math.max(1,...Object.values(bc));
  const g={};for(const t of S.tx)(g[t.date]=g[t.date]||[]).push(t);
- v.innerHTML=`<button class="back" onclick="rep=null;buzz(5);renderReports()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m10 3-5 5 5 5"/></svg>All reports</button>
+ const cs=cycles(),ix=cs.findIndex(x=>x.s==s),ar=(d,j)=>`<button onclick="rep='${cs[j]?cs[j].s:''}';selDay=null;buzz(5);renderReports()" ${cs[j]?'':'disabled'}><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="${d}"/></svg></button>`;
+ let bars='';const hi=Math.max(1,...Object.values(S.by));for(let k=0;k<S.n;k++){const d=ymd(new Date(c.sd.getFullYear(),c.sd.getMonth(),28+k)),x=Math.max(0,S.by[d]||0),fu=d>today();bars+=`<i class="${x>=hi*.999&&x>0?'h':''} ${d==selDay?'s':''}" style="height:${fu?2:Math.max(2,x/hi*100)}%;animation-delay:${k*10}ms;${fu?'opacity:.35':''}" onclick="selDay='${d}';buzz(5);renderReports()"></i>`}
+ const dl=S.cur?days(D0(),c.ed):0;
+ v.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between"><button class="back" style="margin:0" onclick="rep=null;selDay=null;buzz(5);renderReports()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m10 3-5 5 5 5"/></svg>All reports</button><div class="cyc" style="padding:16px 0 0;gap:6px">${ar('m10 3-5 5 5 5',ix+1)}${ar('m6 3 5 5-5 5',ix-1)}</div></div>
  <div class="hero"><div class="lab">${mlab(c)}${S.cur?'<span class="tag">In progress</span>':''}</div><div class="big num">${f2(S.tot).replace(/\.(\d\d)$/,'<span class="c">.$1</span>')}</div>
  <div class="prog"><i id="rpg" style="${S.tot>S.b?'background:var(--wr)':''}"></i></div>
  <div class="sub"><span>${left<0?`<b class="up">${f0(-left)}</b> over`:`<b>${f0(left)}</b> left`}</span><span class="num" onclick="cycBudget('${s}')">${Math.round(S.tot/S.b*100)}% of <b>${f0(S.b)}</b> ✎</span></div>
  ${dlt!=null?`<div style="margin-top:14px;font-size:14px;color:var(--mu)"><b class="${dlt>0?'up':'dn'}">${dlt>0?'▲':'▼'} ${Math.abs(dlt).toFixed(0)}%</b> vs previous cycle (${f0(P.tot)})${S.cur?' · so far':''}</div>`:''}
- <div class="kv2"><div><span>Transactions</span><b class="num">${S.tx.length}</b></div><div><span>Avg per day</span><b class="num">${f2(S.tot/S.el)}</b></div><div><span>Highest day</span><b class="num">${hd?f2(hd[1]):'—'}</b>${hd?`<span>${fd(hd[0])}</span>`:''}</div><div><span>Days</span><b class="num">${S.cur?S.el+' of '+S.n:S.n}</b></div></div></div>
+ <div class="kv2"><div><span>Transactions</span><b class="num">${S.tx.length}</b></div><div><span>Avg per day</span><b class="num">${f2(S.tot/S.el)}</b></div><div><span>Highest day</span><b class="num">${hd?f2(hd[1]):'—'}</b>${hd?`<span>${fd(hd[0])}</span>`:''}</div><div><span>${S.cur?'Days left':'Days'}</span><b class="num">${S.cur?dl+' of '+S.n:S.n+' · done'}</b>${S.cur&&left>0?`<span>${f0(left/Math.max(1,dl))}/day to stay on budget</span>`:''}</div></div></div>
+ <div class="sec"><h3>Daily</h3><a class="num">${selDay&&S.by[selDay]!=null||selDay?fd(selDay)+' · '+f2(S.by[selDay]||0):'tap a bar'}</a></div>
+ <div class="chart">${bars}</div><div class="ax"><span>${fd(c.s)}</span><span>${fd(ymd(new Date(c.ed-864e5)))}</span></div>
  <div class="sec"><h3>Categories</h3></div>${Object.entries(bc).sort((a,b)=>b[1]-a[1]).map(([k,x],j)=>`<div class="cr"><div class="t"><div>${EM[k]||'💳'} &nbsp;${k}</div><span class="num">${f2(x)} · ${S.tot?Math.round(x/S.tot*100):0}%</span></div><div class="cb"><i style="width:${Math.max(0,x/mx*100)}%;animation-delay:${j*50}ms;opacity:${1-j*.07}"></i></div></div>`).join('')||'<div class="empty">No spending.</div>'}
  ${tm.length?`<div class="sec"><h3>Top merchants</h3></div>${tm.map(([k,[a,n]])=>`<div class="ln2"><div>${esc(k)} <span>· ${n}×</span></div><b class="num" style="font-weight:550">${f2(a)}</b></div>`).join('')}`:''}
  <div class="sec"><h3>Notes</h3></div>
@@ -228,7 +232,7 @@ function cycBudget(s){const c=cyc2(s),cur=s==cycleOf(0).s;sheet(`<div class="mh"
 
 // nav
 function go(v){view=v;document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id=='v-'+v));document.querySelectorAll('nav .t').forEach(b=>b.classList.toggle('on',b.dataset.v==v));
- $('ttl').textContent=v=='stats'?'Insights':v=='reports'?'Reports':'Vault';if(v=='reports'){rep=null;renderReports()}else v=='stats'?renderStats():renderHome();scrollTo({top:0,behavior:'smooth'});buzz(5)}
+ $('ttl').textContent=v=='reports'?'Reports':'Vault';if(v=='reports'){rep=null;renderReports()}else v=='stats'?renderStats():renderHome();scrollTo({top:0,behavior:'smooth'});buzz(5)}
 document.querySelectorAll('nav .t').forEach(b=>b.onclick=()=>go(b.dataset.v));
 function openFilter(){$('srch').classList.add('on');$('fcats').style.display='flex';$('fcats').innerHTML=[['?','Unsorted'],...CATS.map(c=>[c[0],c[1]+' '+c[0]])].map(([k,l])=>`<button class="chip ${filt==k?'on':''}" onclick="filt=filt=='${k}'?null:'${k}';buzz(5);openFilter();renderHome()">${l}</button>`).join('')}
 function toggleSearch(){if(view!='home')go('home');if($('srch').classList.contains('on')){$('srch').classList.remove('on');$('fcats').style.display='none';query='';filt=null;$('q').value='';renderHome()}else{openFilter();setTimeout(()=>$('q').focus(),60)}buzz(5)}
