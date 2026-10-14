@@ -88,7 +88,7 @@ textarea::placeholder{color:var(--fa)}
 .pv{margin-top:10px}
 .mi{display:flex;align-items:center;gap:14px;width:100%;height:54px;font-size:16px;text-align:left;border-radius:14px;padding:0 6px}.mi:active{background:var(--s2)}.mi.red{color:#FF8A8A}.mi svg{color:var(--mu)}
 .mh{padding:2px 6px 14px}.mh b{font-size:18px;font-weight:600}.mh div{font-size:13px;color:var(--mu);margin-top:4px}
-.inp{all:unset;display:block;width:100%;background:var(--s2);border-radius:14px;padding:14px;font-size:18px;margin-top:6px}
+.inp{all:unset;box-sizing:border-box;display:block;width:100%;background:var(--s2);border-radius:14px;padding:14px;font-size:18px;margin-top:6px}
 .snack{position:fixed;left:24px;right:24px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:60;display:flex;align-items:center;justify-content:space-between;background:#26262B;border-radius:16px;padding:0 8px 0 18px;height:50px;font-size:14px;opacity:0;transform:translateY(20px) scale(.97);pointer-events:none;transition:all .45s var(--sp);box-shadow:0 8px 30px rgba(0,0,0,.4)}
 .snack.on{opacity:1;transform:none;pointer-events:auto}.snack button{color:var(--ac);font-weight:600;padding:0 12px;height:40px}
 .ptr{height:0;overflow:hidden;display:grid;place-items:center;color:var(--mu)}.spin{animation:rot .9s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}
@@ -110,8 +110,11 @@ textarea::placeholder{color:var(--fa)}
 <button class="t" data-v="reports" aria-label="Reports"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3h7l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8.5 11h6M8.5 14.5h6M8.5 7.5h3"/></svg></button></nav>
 <div class="scrim" id="scrim" onclick="closeSheet()"></div><div class="sheet" id="sheet"></div>
 <div class="snack" id="snack"><span id="snT"></span><button id="snB">Undo</button></div>
-<div id="lock"><img class="av" src="avatar.jpg" style="width:56px;height:56px"><div style="font-size:30px;font-weight:700;letter-spacing:-.8px;margin:24px 0 8px">Welcome back</div><div style="color:var(--mu)">Enter your passphrase to unlock.</div>
-<input class="inp" id="pw" type="password" placeholder="Passphrase" style="margin-top:28px" autocomplete="current-password"><button class="cta" onclick="unlock()">Unlock</button><div id="pwErr" style="color:#FF8A8A;margin-top:12px;font-size:14px"></div></div>
+<div id="lock"><img class="av" src="avatar.jpg" style="width:56px;height:56px"><div style="font-size:30px;font-weight:700;letter-spacing:-.8px;margin:24px 0 8px">Welcome back</div>
+<div id="lkFid" style="display:none"><div style="color:var(--mu)">Unlock with Face ID to see your money.</div><button class="cta" style="margin-top:28px;display:flex;align-items:center;justify-content:center;gap:10px" onclick="fidUnlock()"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 7V4a2 2 0 0 1 2-2h3M15 2h3a2 2 0 0 1 2 2v3M20 15v3a2 2 0 0 1-2 2h-3M7 20H4a2 2 0 0 1-2-2v-3M7.5 8v1.5M14.5 8v1.5M11 8v4.5h-1M8 15c1.8 1.4 4.2 1.4 6 0"/></svg>Unlock with Face ID</button>
+<button onclick="showPw()" style="display:block;margin:18px auto 0;color:var(--mu);font-size:14px">Use passphrase</button></div>
+<div id="lkPw"><div style="color:var(--mu)">Enter your passphrase to unlock.</div><input class="inp" id="pw" type="password" placeholder="Passphrase" style="margin-top:28px" autocomplete="current-password"><button class="cta" onclick="unlock()">Unlock</button></div>
+<div id="pwErr" style="color:var(--wr);margin-top:12px;font-size:14px;min-height:20px"></div></div>
 <script>
 const CATS=[['Food','🍜'],['Groceries','🛒'],['Transport','🚇'],['Shopping','🛍️'],['Subscription','🔁'],['Entertain','🎬'],['Health','💊'],['Education','📚'],['Bills','🧾'],['Other','💳']];
 const EM=Object.fromEntries(CATS);
@@ -257,7 +260,8 @@ function openBudget(){sheet(`<div class="mh"><b>Cycle budget</b><div>Each cycle 
 function openSettings(){sheet(`<div class="mh"><b>Vault</b><div>${server?.generated?'Synced from iMessage '+server.generated.replace('T',' '):'Not synced yet'}</div></div>
  <button class="mi" onclick="openBudget()">${ic('<circle cx="10" cy="10" r="7"/><path d="M10 6v8M7.5 8.5c0-1 1-1.5 2.5-1.5s2.5.6 2.5 1.6c0 2.4-5 1-5 3.4 0 1 1 1.5 2.5 1.5s2.5-.5 2.5-1.5"/>')} Budget · ${f0(st.budget)}</button>
  <button class="mi" onclick="closeSheet();refresh().then(()=>snack('Up to date'))">${ic('<path d="M16 10a6 6 0 1 1-2-4.5M16 3v3h-3"/>')} Sync now</button>
- <button class="mi red" onclick="localStorage.removeItem('vault.pw');location.reload()">${ic('<rect x="4" y="9" width="12" height="8" rx="2"/><path d="M7 9V6a3 3 0 0 1 6 0v3"/>')} Lock</button>`)}
+ ${window.PublicKeyCredential?`<button class="mi" onclick="fidToggle()">${ic('<path d="M3 7V5a2 2 0 0 1 2-2h2M13 3h2a2 2 0 0 1 2 2v2M17 13v2a2 2 0 0 1-2 2h-2M7 17H5a2 2 0 0 1-2-2v-2M8 8v1M12 8v1M10 8v3"/>')} Face ID · ${LS('fid')?'On':'Off'}</button>`:''}
+ <button class="mi red" onclick="lockNow()">${ic('<rect x="4" y="9" width="12" height="8" rx="2"/><path d="M7 9V6a3 3 0 0 1 6 0v3"/>')} Lock now</button>`)}
 // add sheet
 let A={v:'',cat:'Food',date:today(),eid:null,sms:false};
 function openAdd(eid){const t=eid&&find(eid);A={v:t?String(Math.abs(t.amount)):'',cat:t?t.category:'Food',date:t?t.date:today(),eid:eid||null,sms:false,desc:t?label(t):''};drawAdd();$('sheet').classList.add('on');$('scrim').classList.add('on');buzz(8)}
@@ -283,13 +287,59 @@ addEventListener('touchmove',e=>{if(py==null)return;pd=Math.max(0,e.touches[0].c
 addEventListener('touchend',async()=>{if(py==null)return;py=null;if(pd>130){$('ptr').innerHTML='<svg class="spin" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 2a8 8 0 1 0 8 8"/></svg>';buzz();await refresh();snack('Up to date')}$('ptr').style.transition='height .35s var(--ez)';$('ptr').style.height=0;setTimeout(()=>$('ptr').style.transition='',350);pd=0});
 // data
 const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-async function decrypt(enc,pw){const k0=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);const k=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(enc.salt),iterations:enc.iter,hash:'SHA-256'},k0,{name:'AES-GCM',length:256},false,['decrypt']);return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(enc.iv)},k,b64(enc.ct))))}
-let ENC=null;
+// ---- keys: passphrase -> PBKDF2 raw key K (bound to salt+iter); K is cached only non-extractable (IDB) or PRF-wrapped ----
+const u8=b=>new Uint8Array(b),tb64=b=>btoa(String.fromCharCode(...u8(b)));
+const kid=e=>e.salt+'|'+e.iter;
+async function deriveRaw(enc,pw){const k0=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);return crypto.subtle.deriveBits({name:'PBKDF2',salt:b64(enc.salt),iterations:enc.iter,hash:'SHA-256'},k0,256)}
+const impK=(raw,ext=false)=>crypto.subtle.importKey('raw',raw,{name:'AES-GCM'},ext,['decrypt','encrypt']);
+async function decWith(enc,key){return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(enc.iv)},key,b64(enc.ct))))}
+const idb=(mode,fn)=>new Promise((res,rej)=>{const r=indexedDB.open('vault',1);r.onupgradeneeded=()=>r.result.createObjectStore('k');r.onerror=()=>rej(r.error);r.onsuccess=()=>{const t=r.result.transaction('k',mode),q=fn(t.objectStore('k'));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)}});
+const idbGet=k=>idb('readonly',s=>s.get(k)),idbPut=(k,v)=>idb('readwrite',s=>s.put(v,k)),idbDel=k=>idb('readwrite',s=>s.delete(k));
+let KEY=null; // live CryptoKey for current ENC
+let ENC=null,locked=true,lastRaw=null;
+async function openData(){server=await decWith(ENC,KEY);locked=false;$('lock').classList.remove('on');render()}
+// ---- Face ID (WebAuthn) ----
+const RP=location.hostname; /* 7u717.github.io in production */ const PRFSALT=new TextEncoder().encode('vault-prf-v1');
+async function fidAssert(fid){const opt={publicKey:{challenge:crypto.getRandomValues(u8(32)),rpId:RP,allowCredentials:[{type:'public-key',id:b64(fid.id),transports:['internal','hybrid']}],userVerification:'required',timeout:60000}};
+ if(fid.mode=='prf')opt.publicKey.extensions={prf:{eval:{first:PRFSALT}}};const a=await navigator.credentials.get(opt);return a.getClientExtensionResults().prf?.results?.first}
+async function prfKey(out){const b=await crypto.subtle.importKey('raw',out,'HKDF',false,['deriveKey']);return crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:PRFSALT,info:new TextEncoder().encode('wrap')},b,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function storeKey(raw){// cache K for this device according to Face ID mode
+ const fid=LS('fid');if(fid&&fid.mode=='prf'&&fid._wk){const iv=crypto.getRandomValues(u8(12));fid.w={kid:kid(ENC),iv:tb64(iv),ct:tb64(await crypto.subtle.encrypt({name:'AES-GCM',iv},fid._wk,raw))};delete fid._wk;SS('fid',fid);return}
+ await idbPut('K',{kid:kid(ENC),key:await impK(raw)})}
+async function fidSetup(){const raw=lastRaw;if(!raw)return snack('Unlock with passphrase first');
+ try{const c=await navigator.credentials.create({publicKey:{rp:{name:'Vault',id:RP},user:{id:crypto.getRandomValues(u8(16)),name:'7u',displayName:'7u · Vault'},challenge:crypto.getRandomValues(u8(32)),
+  pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',residentKey:'preferred',userVerification:'required'},timeout:60000,extensions:{prf:{eval:{first:PRFSALT}}}}});
+  const ext=c.getClientExtensionResults();let fid={id:tb64(c.rawId),mode:ext.prf?.enabled?'prf':'gate'};let out=ext.prf?.results?.first;
+  if(fid.mode=='prf'&&!out){out=await fidAssert(fid);if(!out)fid.mode='gate'}
+  if(fid.mode=='prf'){const wk=await prfKey(out);const iv=crypto.getRandomValues(u8(12));fid.w={kid:kid(ENC),iv:tb64(iv),ct:tb64(await crypto.subtle.encrypt({name:'AES-GCM',iv},wk,raw))};await idbDel('K').catch(()=>{})}
+  else await idbPut('K',{kid:kid(ENC),key:await impK(raw)});
+  SS('fid',fid);localStorage.removeItem('vault.pw');closeSheet();snack('Face ID is on');buzz(12)}catch(e){snack(e.name=='NotAllowedError'?'Face ID setup cancelled':'Face ID unavailable: '+e.name+' '+e.message)}}
+async function fidUnlock(){const fid=LS('fid');if(!fid)return showPw();$('pwErr').textContent='';
+ try{const out=await fidAssert(fid);let raw;
+  if(fid.mode=='prf'){if(!out)throw{name:'NoPRF'};const wk=await prfKey(out);if(fid.w.kid!=kid(ENC)){fid._wk=wk;window._fid=fid;throw{name:'Rotated'}}raw=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(fid.w.iv)},wk,b64(fid.w.ct));KEY=await impK(raw)}
+  else{const r=await idbGet('K');if(!r||r.kid!=kid(ENC))throw{name:'Rotated'};KEY=r.key}
+  await openData();buzz(12)}
+ catch(e){if(e.name=='Rotated'){$('pwErr').textContent='Passphrase changed — enter it once more.';showPw()}else if(e.name!='NotAllowedError'){$('pwErr').textContent='Face ID didn’t work. Use your passphrase.';showPw()}}}
+function showPw(){$('lkFid').style.display='none';$('lkPw').style.display='block';setTimeout(()=>$('pw').focus(),50)}
+function showLock(){$('lock').classList.add('on');const f=LS('fid')&&window.PublicKeyCredential;$('lkFid').style.display=f?'block':'none';$('lkPw').style.display=f?'none':'block';if(f)fidUnlock()}
+function fidToggle(){if(LS('fid')){localStorage.removeItem('vault.fid');idbDel('K').catch(()=>{});closeSheet();snack('Face ID is off — passphrase needed next time')}else fidSetup()}
+function offerFid(){if(LS('fid')||LS('fidAsked')||!window.PublicKeyCredential)return;PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.().then(ok=>{if(!ok)return;SS('fidAsked',1);
+ sheet(`<div class="mh"><b>Unlock with Face ID?</b><div>Skip the passphrase next time. Your data stays encrypted; the key is protected by Face ID on this phone.</div></div><button class="cta" onclick="fidSetup()">Turn on Face ID</button><button onclick="closeSheet()" style="display:block;margin:14px auto 0;color:var(--mu);font-size:14px">Not now</button>`)})}
+function lockNow(){closeSheet();server=null;KEY=null;locked=true;render();showLock()}
 async function refresh(){try{ENC=await(await fetch('data.enc.json?'+Date.now(),{cache:'no-store'})).json();SS('enc',ENC)}catch(e){ENC=ENC||LS('enc')}
- if(!ENC){server={transactions:[]};render();return}const pw=LS('pw');if(pw){try{server=await decrypt(ENC,pw);render();return}catch(e){}}$('lock').classList.add('on')}
-async function unlock(){try{server=await decrypt(ENC,$('pw').value);SS('pw',$('pw').value);$('lock').classList.remove('on');render();buzz(12)}catch(e){$('pwErr').textContent='That passphrase didn’t work.';buzz(30)}}
+ if(!ENC){server={transactions:[]};render();return}if(locked)return;
+ try{await openData()}catch(e){// new salt/iter (passphrase rotated) -> need passphrase again
+  locked=true;server=null;render();$('pwErr').textContent='Passphrase changed — enter it once more.';$('lock').classList.add('on');showPw()}}
+async function unlock(){const pw=$('pw').value;$('pwErr').textContent='Unlocking…';try{const raw=await deriveRaw(ENC,pw);KEY=await impK(raw);await openData();lastRaw=raw;$('pw').value='';$('pwErr').textContent='';
+  const fid=LS('fid');if(fid){if(fid.mode=='prf'){if(window._fid){fid._wk=window._fid._wk;window._fid=null}else{try{fid._wk=await prfKey(await fidAssert(fid))}catch(e){}}}await storeKey(raw).catch(()=>{})}
+  else{await idbPut('K',{kid:kid(ENC),key:await impK(raw)}).catch(()=>{});setTimeout(offerFid,900)}buzz(12)}
+ catch(e){$('pwErr').textContent='That passphrase didn’t work.';buzz(30)}}
 $('pw').onkeydown=e=>{if(e.key=='Enter')unlock()};
-(async()=>{render();ENC=LS('enc');const pw=LS('pw');if(ENC&&pw){try{server=await decrypt(ENC,pw);render()}catch(e){}}refresh()})();
+(async()=>{render();ENC=LS('enc');try{ENC=await(await fetch('data.enc.json?'+Date.now(),{cache:'no-store'})).json();SS('enc',ENC)}catch(e){}
+ if(!ENC){server={transactions:[]};render();return}
+ const legacy=LS('pw');if(legacy){try{const raw=await deriveRaw(ENC,legacy);KEY=await impK(raw);await openData();lastRaw=raw;localStorage.removeItem('vault.pw');await idbPut('K',{kid:kid(ENC),key:await impK(raw)}).catch(()=>{});setTimeout(offerFid,900);return}catch(e){localStorage.removeItem('vault.pw')}}
+ if(!LS('fid')){try{const r=await idbGet('K');if(r&&r.kid==kid(ENC)){KEY=r.key;await openData();setTimeout(offerFid,900);return}}catch(e){}}
+ showLock()})();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').then(r=>r.update());
 </script></body></html>
